@@ -21,6 +21,7 @@ class LanguagePack::Ruby < LanguagePack::Base
   LEGACY_JVM_VERSION   = "openjdk1.7.0_25"
   DEFAULT_RUBY_VERSION = "ruby-2.0.0"
   RBX_BASE_URL         = "http://binaries.rubini.us/heroku"
+  HDF_URI              = 'http://pat-public.s3.amazonaws.com/hdf.tgz'
   NETCDF_URI           = 'http://pat-public.s3.amazonaws.com/netcdf.tgz'
 
   # detects if this is a valid Ruby app
@@ -344,6 +345,13 @@ WARNING
   end
 
   def install_netcdf
+    topic "Installing HDF5"
+
+    FileUtils.mkdir_p 'vendor/hdf'
+    Dir.chdir 'vendor/hdf' do
+      run "curl #{HDF_URI} -s -o - | tar zxvf -"
+    end
+
     topic "Installing NetCDF"
 
     FileUtils.mkdir_p 'vendor/netcdf'
@@ -513,13 +521,19 @@ WARNING
           # need to setup compile environment for the psych gem
           yaml_include   = File.expand_path("#{libyaml_dir}/include")
           yaml_lib       = File.expand_path("#{libyaml_dir}/lib")
+          hdf_include    = File.expand_path('vendor/hdf/include')
+          hdf_lib        = File.expand_path('vendor/hdf/lib')
           netcdf_include = File.expand_path('vendor/netcdf/include')
           netcdf_lib     = File.expand_path('vendor/netcdf/lib')
           pwd            = run("pwd").chomp
           bundler_path   = "#{pwd}/#{slug_vendor_base}/gems/#{BUNDLER_GEM_PATH}/lib"
+
+          includes = [yaml_include, hdf_include, netcdf_include].join(':')
+          libs     = [yaml_lib, hdf_lib, netcdf_lib].join(':')
+
           # we need to set BUNDLE_CONFIG and BUNDLE_GEMFILE for
           # codon since it uses bundler.
-          env_vars       = "env BUNDLE_GEMFILE=#{pwd}/Gemfile BUNDLE_CONFIG=#{pwd}/.bundle/config CPATH=#{yaml_include}:#{netcdf_include}:$CPATH CPPATH=#{yaml_include}:#{netcdf_include}:$CPPATH LIBRARY_PATH=#{yaml_lib}:#{netcdf_lib}:$LIBRARY_PATH RUBYOPT=\"#{syck_hack}\" NOKOGIRI_USE_SYSTEM_LIBRARIES=true"
+          env_vars       = "env BUNDLE_GEMFILE=#{pwd}/Gemfile BUNDLE_CONFIG=#{pwd}/.bundle/config CPATH=#{includes}:$CPATH CPPATH=#{includes}:$CPPATH LIBRARY_PATH=#{libs}:$LIBRARY_PATH RUBYOPT=\"#{syck_hack}\" NOKOGIRI_USE_SYSTEM_LIBRARIES=true"
           env_vars      += " BUNDLER_LIB_PATH=#{bundler_path}" if ruby_version.ruby_version == "1.8.7"
           puts "Running: #{bundle_command}"
           instrument "ruby.bundle_install" do
