@@ -99,6 +99,7 @@ class LanguagePack::Ruby < LanguagePack::Base
       remove_vendor_bundle
       install_ruby
       install_jvm
+      install_netcdf
       setup_language_pack_environment
       setup_profiled
       allow_git do
@@ -341,6 +342,18 @@ WARNING
     end
   end
 
+  def install_netcdf
+    NETCDF_URI = 'http://pat-public.s3.amazonaws.com/netcdf.tgz'
+
+    topic "Installing NetCDF"
+
+    FileUtils.mkdir_p 'vendor/netcdf'
+    Dir.chdir 'vendor/netcdf' do
+      run "curl #{NETCDF_URI} -s -o - | tar zxvf -"
+    end
+    #
+  end
+
   # find the ruby install path for its binstubs during build
   # @return [String] resulting path or empty string if ruby is not vendored
   def ruby_install_binstub_path
@@ -502,19 +515,19 @@ WARNING
           # need to setup compile environment for the psych gem
           yaml_include   = File.expand_path("#{libyaml_dir}/include")
           yaml_lib       = File.expand_path("#{libyaml_dir}/lib")
+          netcdf_include = File.expand_path('vendor/netcdf/include')
+          netcdf_lib     = File.expand_path('vendor/netcdf/lib')
           pwd            = run("pwd").chomp
           bundler_path   = "#{pwd}/#{slug_vendor_base}/gems/#{BUNDLER_GEM_PATH}/lib"
           # we need to set BUNDLE_CONFIG and BUNDLE_GEMFILE for
           # codon since it uses bundler.
-          env_vars       = "env BUNDLE_GEMFILE=#{pwd}/Gemfile BUNDLE_CONFIG=#{pwd}/.bundle/config CPATH=#{yaml_include}:$CPATH CPPATH=#{yaml_include}:$CPPATH LIBRARY_PATH=#{yaml_lib}:$LIBRARY_PATH RUBYOPT=\"#{syck_hack}\" NOKOGIRI_USE_SYSTEM_LIBRARIES=true"
+          env_vars       = "env BUNDLE_GEMFILE=#{pwd}/Gemfile BUNDLE_CONFIG=#{pwd}/.bundle/config CPATH=#{yaml_include}:#{netcdf_include}:$CPATH CPPATH=#{yaml_include}:#{netcdf_include}:$CPPATH LIBRARY_PATH=#{yaml_lib}:#{netcdf_lib}:$LIBRARY_PATH RUBYOPT=\"#{syck_hack}\" NOKOGIRI_USE_SYSTEM_LIBRARIES=true"
           env_vars      += " BUNDLER_LIB_PATH=#{bundler_path}" if ruby_version.ruby_version == "1.8.7"
           puts "Running: #{bundle_command}"
           instrument "ruby.bundle_install" do
             bundle_time = Benchmark.realtime do
-              bundler_output << pipe("#{env_vars} bundle config build.ruby-netcdf --with-netcdf-dir=#{pwd}/vendor/netcdf 2>&1")
+              # bundler_output << pipe("#{env_vars} bundle config build.ruby-netcdf --with-netcdf-dir=#{pwd}/vendor/netcdf 2>&1")
               bundler_output << pipe("#{env_vars} #{bundle_command} --no-clean 2>&1")
-
-              puts `cat #{pwd}/vendor/bundle/ruby/1.9.1/gems/ruby-netcdf-0.6.6.1/gem_make.out`
             end
           end
         end
