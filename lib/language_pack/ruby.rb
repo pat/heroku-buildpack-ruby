@@ -466,6 +466,7 @@ WARNING
   def build_bundler
     instrument 'ruby.build_bundler' do
       log("bundle") do
+        topic("Using Pat's Custom Buildpack")
         bundle_without = ENV["BUNDLE_WITHOUT"] || "development:test"
         bundle_bin     = "bundle"
         bundle_command = "#{bundle_bin} install --without #{bundle_without} --path vendor/bundle --binstubs #{bundler_binstubs_path}"
@@ -510,7 +511,7 @@ WARNING
           puts "Running: #{bundle_command}"
           instrument "ruby.bundle_install" do
             bundle_time = Benchmark.realtime do
-              bundler_output << pipe("#{env_vars} bundle config build.ruby-netcdf --with-netcdf-dir=#{pwd}/vendor/netcdf")
+              bundler_output << pipe("#{env_vars} bundle config build.ruby-netcdf --with-netcdf-dir=#{pwd}/vendor/netcdf 2>&1")
               bundler_output << pipe("#{env_vars} #{bundle_command} --no-clean 2>&1")
             end
           end
@@ -534,6 +535,7 @@ WARNING
           # Keep gem cache out of the slug
           FileUtils.rm_rf("#{slug_vendor_base}/cache")
         else
+          puts `cat #{pwd}/vendor/bundle/ruby/1.9.1/gems/ruby-netcdf-0.6.6.1/gem_make.out`
           log "bundle", :status => "failure"
           error_message = "Failed to install gems via Bundler."
           puts "Bundler Output: #{bundler_output}"
