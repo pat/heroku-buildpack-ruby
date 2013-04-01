@@ -513,6 +513,8 @@ WARNING
             bundle_time = Benchmark.realtime do
               bundler_output << pipe("#{env_vars} bundle config build.ruby-netcdf --with-netcdf-dir=#{pwd}/vendor/netcdf 2>&1")
               bundler_output << pipe("#{env_vars} #{bundle_command} --no-clean 2>&1")
+
+              puts `cat #{pwd}/vendor/bundle/ruby/1.9.1/gems/ruby-netcdf-0.6.6.1/gem_make.out`
             end
           end
         end
@@ -535,7 +537,6 @@ WARNING
           # Keep gem cache out of the slug
           FileUtils.rm_rf("#{slug_vendor_base}/cache")
         else
-          puts `cat #{pwd}/vendor/bundle/ruby/1.9.1/gems/ruby-netcdf-0.6.6.1/gem_make.out`
           log "bundle", :status => "failure"
           error_message = "Failed to install gems via Bundler."
           puts "Bundler Output: #{bundler_output}"
