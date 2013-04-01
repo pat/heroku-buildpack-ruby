@@ -21,6 +21,7 @@ class LanguagePack::Ruby < LanguagePack::Base
   LEGACY_JVM_VERSION   = "openjdk1.7.0_25"
   DEFAULT_RUBY_VERSION = "ruby-2.0.0"
   RBX_BASE_URL         = "http://binaries.rubini.us/heroku"
+  NETCDF_URI           = 'http://pat-public.s3.amazonaws.com/netcdf.tgz'
 
   # detects if this is a valid Ruby app
   # @return [Boolean] true if it's a Ruby app
@@ -343,15 +344,12 @@ WARNING
   end
 
   def install_netcdf
-    NETCDF_URI = 'http://pat-public.s3.amazonaws.com/netcdf.tgz'
-
     topic "Installing NetCDF"
 
     FileUtils.mkdir_p 'vendor/netcdf'
     Dir.chdir 'vendor/netcdf' do
       run "curl #{NETCDF_URI} -s -o - | tar zxvf -"
     end
-    #
   end
 
   # find the ruby install path for its binstubs during build
