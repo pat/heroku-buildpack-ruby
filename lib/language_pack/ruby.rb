@@ -539,7 +539,7 @@ WARNING
           puts "Running: #{bundle_command}"
           instrument "ruby.bundle_install" do
             bundle_time = Benchmark.realtime do
-              # bundler_output << pipe("#{env_vars} bundle config build.ruby-netcdf --with-netcdf-dir=#{pwd}/vendor/netcdf 2>&1")
+              bundler_output << pipe("#{env_vars} bundle config build.ruby-netcdf --with-netcdf-dir=#{pwd}/vendor/netcdf 2>&1")
               bundler_output << pipe("#{env_vars} #{bundle_command} --no-clean 2>&1")
             end
           end
