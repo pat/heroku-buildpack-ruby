@@ -347,15 +347,15 @@ WARNING
   def install_netcdf
     topic "Installing HDF5"
 
-    FileUtils.mkdir_p 'vendor/hdf'
-    Dir.chdir 'vendor/hdf' do
+    FileUtils.mkdir_p '/app/vendor/hdf'
+    Dir.chdir '/app/vendor/hdf' do
       run "curl #{HDF_URI} -s -o - | tar zxvf -"
     end
 
     topic "Installing NetCDF"
 
-    FileUtils.mkdir_p 'vendor/netcdf'
-    Dir.chdir 'vendor/netcdf' do
+    FileUtils.mkdir_p '/app/vendor/netcdf'
+    Dir.chdir '/app/vendor/netcdf' do
       run "curl #{NETCDF_URI} -s -o - | tar zxvf -"
     end
   end
@@ -521,10 +521,10 @@ WARNING
           # need to setup compile environment for the psych gem
           yaml_include   = File.expand_path("#{libyaml_dir}/include")
           yaml_lib       = File.expand_path("#{libyaml_dir}/lib")
-          hdf_include    = File.expand_path('vendor/hdf/include')
-          hdf_lib        = File.expand_path('vendor/hdf/lib')
-          netcdf_include = File.expand_path('vendor/netcdf/include')
-          netcdf_lib     = File.expand_path('vendor/netcdf/lib')
+          hdf_include    = '/app/vendor/hdf/include'
+          hdf_lib        = '/app/vendor/hdf/lib'
+          netcdf_include = '/app/vendor/netcdf/include'
+          netcdf_lib     = '/app/vendor/netcdf/lib'
           pwd            = run("pwd").chomp
           bundler_path   = "#{pwd}/#{slug_vendor_base}/gems/#{BUNDLER_GEM_PATH}/lib"
 
@@ -539,7 +539,7 @@ WARNING
           puts "Running: #{bundle_command}"
           instrument "ruby.bundle_install" do
             bundle_time = Benchmark.realtime do
-              bundler_output << pipe("#{env_vars} bundle config build.ruby-netcdf --with-netcdf-dir=#{pwd}/vendor/netcdf 2>&1")
+              bundler_output << pipe("#{env_vars} bundle config build.ruby-netcdf --with-netcdf-dir=/app/vendor/netcdf 2>&1")
               bundler_output << pipe("#{env_vars} #{bundle_command} --no-clean 2>&1")
             end
           end
